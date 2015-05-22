@@ -77,6 +77,10 @@ DWORD WINAPI tickThreadProc(HANDLE handle)
    {
       timeServerConnected = true;
    }
+   if(ctx.fps < 1.0)
+   {
+      ctx.fps = 25;
+   }
 
    Sleep(100);
    ShowWindow(ctx.hwnd, SW_SHOW);
@@ -264,7 +268,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    ctx.hwnd = CreateWindowEx( WS_EX_APPWINDOW
                              ,videoFile
                              ,videoFile
-                             ,WS_POPUP | WS_VISIBLE
+                             ,WS_POPUP | WS_VISIBLE | WS_CAPTION |WS_MAXIMIZEBOX
                              ,mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left
                              ,mi.rcMonitor.bottom - mi.rcMonitor.top
                              ,NULL, NULL, hInstance, NULL );
