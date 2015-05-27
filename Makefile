@@ -13,13 +13,13 @@ LIBAV = import/lib/libavcodec.dll.a\
 
 FLAGS = -Wall -Os -static-libgcc -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS 
 
-all: videoserver timeserver
+all: videoserver testclient
 
-videoserver : videoserver.cpp H264_Decoder.cpp TimeStampClient.cpp
-	$(GCC) -o videoserver.exe videoserver.cpp H264_Decoder.cpp TimeStampClient.cpp $(FLAGS) $(INCLUDE) $(LIBRARY) $(LIBAV) $(WINLIBRARY)
+videoserver : videoserver.cpp H264_Decoder.cpp TimeStampProvider.cpp CommandServer.cpp
+	$(GCC) -o videoserver.exe videoserver.cpp H264_Decoder.cpp TimeStampProvider.cpp CommandServer.cpp $(FLAGS) $(INCLUDE) $(LIBRARY) $(LIBAV) $(WINLIBRARY)
 
-timeserver : timeserver.cpp
-	$(GCC) -o timeserver.exe timeserver.cpp $(FLAGS) $(INCLUDE) $(LIBRARY) 
+testclient : testclient.cpp
+	$(GCC) -o testclient.exe testclient.cpp TimeStampClient.cpp $(FLAGS) $(INCLUDE) $(LIBRARY) 
 
 clean:
 	rm -r *.o

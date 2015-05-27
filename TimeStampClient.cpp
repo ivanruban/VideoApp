@@ -8,20 +8,6 @@
 
 #include "TimeStampClient.hpp"
 
-typedef enum
-{
-  eStart = 0,
-  eStop =  1,
-  eTimeStamp = 2,
-} eCommand;
-
-typedef struct
-{
-  uint32_t command; //eCommand
-  uint32_t timestamp; // timestamp in ms from start of video
-} TCommStruct;
-
-
 int TimeStampClient::init(const char* addr, const int port)
 {
    int err = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -46,7 +32,6 @@ int TimeStampClient::init(const char* addr, const int port)
 
    if(connect(sClient, (LPSOCKADDR)&sinClient, sizeof(sinClient)) == SOCKET_ERROR)
    {
-      fprintf(stderr,"Could not connect to the server!\n");
       WSACleanup();
       return EIO;
    }
@@ -60,6 +45,20 @@ void TimeStampClient::deinit()
    closesocket(sClient);
    WSACleanup();
 }
+
+int TimeStampClient::receiveCmd(TCommStruct *msg)
+{
+   int res;
+
+   res = recv(sClient, (char*)msg, sizeof(TCommStruct), 0);
+   if (res == sizeof(TCommStruct))
+   {
+      return 0;
+   }
+
+   return EIO;
+}
+
 
 int TimeStampClient::sendStartCmd()
 {
@@ -89,7 +88,6 @@ int TimeStampClient::sendStopCmd()
    return 0;
 }
 
-
 int TimeStampClient::sendTimeStamp(const uint32_t timestamp)
 {
    int err;
@@ -103,5 +101,3 @@ int TimeStampClient::sendTimeStamp(const uint32_t timestamp)
 
    return 0;
 }
-
-
