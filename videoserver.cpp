@@ -232,7 +232,7 @@ DWORD WINAPI streamVideoWithTimeStamp(HANDLE handle)
 
    int frameTimeStampMS;
    LARGE_INTEGER frameProcessingStarted;
-   for (int frameNumber=0; ;frameNumber++)
+   for (int frameNumber=0; ctx.streamingRunning ;frameNumber++)
    {
       QueryPerformanceCounter(&frameProcessingStarted);
       Frame frame;
@@ -307,7 +307,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             fatalError("Can't create idle thread");
             return 0;
          }
-       }
+      }
       break;
 
       case WM_START:
@@ -374,9 +374,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       switch (wParam)
       {
          case VK_ESCAPE:
-         case VK_SPACE:
             ctx.commandServer.sendStopCmd();
             PostQuitMessage(0);
+            return 0;
+
+         case VK_SPACE:
+            if(ctx.streamingRunning && (NULL != ctx.streamingThread))
+            {
+               ctx.streamingRunning = false;
+               CloseHandle(ctx.streamingThread);
+               ctx.streamingThread = NULL;
+            }
+            if(!ctx.idleVideoRunning)
+            {
+               ctx.idleVideoRunning = true;
+               ctx.idleThread = CreateThread(NULL, 0, &playIdleVideo, (void*)ctx.idleAnimation, 0, 0);
+               if(NULL == ctx.idleThread)
+               {
+                  ctx.idleVideoRunning = false;
+                  fatalError("Can't create idle thread");
+                  return 0;
+               }
+            }
             return 0;
       }
       break;
