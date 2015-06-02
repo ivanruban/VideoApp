@@ -82,7 +82,12 @@ static DWORD joinThread(HANDLE hThread)
 {
    DWORD dwExitCode;
 
-   WaitForSingleObject(hThread, INFINITE);
+   BOOL ok = GetExitCodeThread(hThread, &dwExitCode);
+   if(ok && (dwExitCode == STILL_ACTIVE))
+   {
+      WaitForSingleObject(hThread, INFINITE);
+   }
+
    GetExitCodeThread(hThread, &dwExitCode);
    CloseHandle(hThread);
 
@@ -232,7 +237,7 @@ DWORD WINAPI streamVideoWithTimeStamp(HANDLE handle)
 
    int frameTimeStampMS;
    LARGE_INTEGER frameProcessingStarted;
-   for (int frameNumber=0; ctx.streamingRunning ;frameNumber++)
+   for (int frameNumber=0; ctx.streamingRunning; frameNumber++)
    {
       QueryPerformanceCounter(&frameProcessingStarted);
       Frame frame;
@@ -281,7 +286,7 @@ DWORD WINAPI streamVideoWithTimeStamp(HANDLE handle)
    DeleteSurface(ctx.hwnd);
 
    //notify that streaming thread is finished
-   SendMessage(ctx.hwnd, WM_STOP, 0, 0);
+   PostMessage(ctx.hwnd, WM_STOP, 0, 0);
 
    return 0;
 }
@@ -295,7 +300,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
          if(NULL != ctx.streamingThread)
          {
             ctx.streamingRunning = false;
-            CloseHandle(ctx.streamingThread);
+            joinThread(ctx.streamingThread);
             ctx.streamingThread = NULL;
          }
 
@@ -379,23 +384,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
          case VK_SPACE:
-            if(ctx.streamingRunning && (NULL != ctx.streamingThread))
-            {
-               ctx.streamingRunning = false;
-               CloseHandle(ctx.streamingThread);
-               ctx.streamingThread = NULL;
-            }
-            if(!ctx.idleVideoRunning)
-            {
-               ctx.idleVideoRunning = true;
-               ctx.idleThread = CreateThread(NULL, 0, &playIdleVideo, (void*)ctx.idleAnimation, 0, 0);
-               if(NULL == ctx.idleThread)
-               {
-                  ctx.idleVideoRunning = false;
-                  fatalError("Can't create idle thread");
-                  return 0;
-               }
-            }
+            ctx.streamingRunning = false;
             return 0;
       }
       break;
